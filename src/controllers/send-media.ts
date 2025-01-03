@@ -5,7 +5,6 @@ import { GetMessageBodyBasedOnMimeType } from "@/wa-utils";
 
 export const send: RequestHandler = async (req, res, next) => {
 	try {
-		logger.info(req.body.data, "Request received");
 		const { jid, type = "number", message, options } = JSON.parse(req.body.data);
         const file = req.file;
         if (!file) return res.status(400).json({ error: "No file provided" });
@@ -17,9 +16,7 @@ export const send: RequestHandler = async (req, res, next) => {
 		const result = await session.sendMessage(jid, GetMessageBodyBasedOnMimeType(req.file, message), options);
 		res.status(200).json(result);
 	} catch (e) {
-		const message = "An error occured during message send";
-		logger.error(e, message);
+		logger.error(e,e?.message);
 		next(e);
-		//res.status(500).json({ error: message });
 	}
 };
