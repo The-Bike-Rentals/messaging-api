@@ -6,8 +6,9 @@ import { query } from "express-validator";
 
 const router = Router({ mergeParams: true });
 router.get(
-    "/exists/:jid",
+    "/exists",
     query("jid").isString(),
+    query("type").isString(),
     requestValidator,
     sessionValidator,
     misc.exists,

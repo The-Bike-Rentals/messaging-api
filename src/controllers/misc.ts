@@ -56,7 +56,8 @@ export const exists: RequestHandler = async (req, res, next) => {
 	try {
 		const sessionId = req.params.sessionId;
 		const session = WhatsappService.getSession(sessionId)!;
-		const exists = await WhatsappService.jidExists(session, req.params.jid);
+		const type = req.query.type as "number" | "group";
+		const exists = await WhatsappService.jidExists(session, req.params.jid, type);
 		if (exists) return res.status(200).json({ exists: true });
 		return res.status(400).json({ error: "JID does not exists" });
 	}

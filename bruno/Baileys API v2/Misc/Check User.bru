@@ -1,0 +1,11 @@
+meta {
+  name: Check User
+  type: http
+  seq: 1
+}
+
+get {
+  url: /misc/exists/{{jid}}
+  body: none
+  auth: none
+}
