@@ -1,0 +1,17 @@
+meta {
+  name: Check User
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{BASE_URL}}/:sessionId/misc/exists/:jid/:type
+  body: none
+  auth: none
+}
+
+params:path {
+  type: number
+  jid: {{jid}}
+  sessionId: {{session}}
+}
