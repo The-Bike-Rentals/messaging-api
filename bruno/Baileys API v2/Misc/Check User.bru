@@ -5,7 +5,13 @@ meta {
 }
 
 get {
-  url: /misc/exists/{{jid}}
+  url: {{BASE_URL}}/:sessionId/misc/exists/:jid/:type
   body: none
   auth: none
+}
+
+params:path {
+  type: number
+  jid: {{jid}}
+  sessionId: {{session}}
 }
