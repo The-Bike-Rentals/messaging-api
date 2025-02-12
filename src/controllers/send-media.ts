@@ -3,7 +3,7 @@ import WhatsappService from "@/whatsapp/service";
 import { logger } from "@/utils";
 import { GetMessageBodyBasedOnMimeType } from "@/wa-utils";
 
-export const send: RequestHandler = async (req, res) => {
+export const send: RequestHandler = async (req, res, next) => {
 	try {
 		const { jid, type = "number", message, options } = JSON.parse(req.body.data);
         const file = req.file;
@@ -16,8 +16,7 @@ export const send: RequestHandler = async (req, res) => {
 		const result = await session.sendMessage(jid, GetMessageBodyBasedOnMimeType(req.file, message), options);
 		res.status(200).json(result);
 	} catch (e) {
-		const message = "An error occured during message send";
-		logger.error(e, message);
-		res.status(500).json({ error: message });
+		logger.error(e,e?.message);
+		next(e);
 	}
 };

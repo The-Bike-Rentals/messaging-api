@@ -11,9 +11,9 @@ const outputLog = fs.createWriteStream(outputFile,{flags: 'a'});
 const errorsLog = fs.createWriteStream(errorFile,{flags: 'a'});
 
 console.log = function (message: any) {
-    outputLog.write(`${new Date()} | ${message} \n`);
+    outputLog.write(`${new Date().toISOString()} | ${message} \n`);
 }
 
 console.error = function (message) {
-    errorsLog.write(`${new Date()} | ${message} \n`);
+    errorsLog.write(`${new Date().toISOString()} | ${message} \n`);
 }
