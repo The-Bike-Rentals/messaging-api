@@ -1,10 +1,18 @@
-FROM node:20.13.0-alpine3.19 AS build
+FROM node:20-alpine AS builder
 
 WORKDIR /app
 
+COPY package*.json .
+
+# Install git
+RUN apk add --no-cache git
+
+RUN npm install --quiet
+
+RUN npx prisma migrate
+
 COPY . .
 
-RUN npm install && apk update && apk upgrade
-
 EXPOSE 3000
-CMD ["npx ts-node /app/src/main.ts" ]
+
+CMD [ "npm", "run", "dev" ]
