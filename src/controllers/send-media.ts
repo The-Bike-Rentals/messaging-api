@@ -15,7 +15,7 @@ export const send: RequestHandler = async (req, res, next) => {
 
 		const result = await session.sendMessage(jid, GetMessageBodyBasedOnMimeType(req.file, message), options);
 		res.status(200).json(result);
-	} catch (e) {
+	} catch (e: any) {
 		logger.error(e,e?.message);
 		next(e);
 	}

@@ -83,7 +83,7 @@ class WhatsappService {
 					prisma.session.deleteMany({ where: { sessionId } }),
 				]);
 				logger.info({ session: sessionId }, "Session destroyed");
-			} catch (e) {
+			} catch (e: any) {
 				logger.error(e, "An error occurred during session destroy");
 			} finally {
 				WhatsappService.sessions.delete(sessionId);
@@ -299,7 +299,7 @@ class WhatsappService {
 			} else {
 				return null;
 			}
-		} catch (e) {
+		} catch (e: any) {
 			return null;
 		}
 	}
