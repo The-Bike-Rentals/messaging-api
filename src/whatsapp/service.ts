@@ -196,7 +196,7 @@ class WhatsappService {
 				creds: state.creds,
 				keys: makeCacheableSignalKeyStore(state.keys, logger),
 			},
-			version: [2,3000,1023223821],
+			version: [2,3000,1027934701],
 			logger,
 			shouldIgnoreJid: (jid) => isJidBroadcast(jid),
 			getMessage: async (key) => {
@@ -311,3 +311,4 @@ class WhatsappService {
 }
 
 export default WhatsappService;
+
