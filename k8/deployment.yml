@@ -19,8 +19,17 @@ spec:
       labels:
         app: whatsapp-api
     spec:
+      initContainers:
+      - name: fix-permissions
+        image: busybox
+        command: ['sh', '-c', 'chown -R 1001:1001 /app/.sessions && chmod -R 775 /app/.sessions']
+        securityContext:
+          runAsUser: 0
+        volumeMounts:
+          - mountPath: /app/.sessions
+            name: volume
       containers:
-      - image: hiteshdutt/whatsapp-api:22535696501
+      - image: hiteshdutt/whatsapp-api:22537751066
         env:
         - name: NODE_ENV
           value: production
