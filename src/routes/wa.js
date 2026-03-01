@@ -17,6 +17,7 @@ const multer = require('multer');
 
 const wa = require('../services/whatsappService');
 const { requireApiKeyOrAdmin } = require('../middleware/apiKey');
+
 const { detectFileType } = require('../utils/fileType');
 const logger = require('../utils/logger');
 
@@ -89,7 +90,7 @@ router.post('/:sessionId/send-media/send', upload.single('media'), async (req, r
 
     const {
       jid,
-      type      = 'individual',
+      type      = 'number',
       message   = '',   // optional hint or override caption
       caption   = '',
     } = parsed;
@@ -136,6 +137,54 @@ router.post('/:sessionId/send-media/send', upload.single('media'), async (req, r
     });
   } catch (err) {
     logger.error({ err }, 'send-media/send error');
+    return res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// GET /:sessionId/misc/exists/:jid/:type
+// Check whether a JID exists on WhatsApp.
+//   type = "number" → uses onWhatsApp() to verify the number is registered
+//   type = "group"      → uses groupMetadata() to verify the group exists
+// ─────────────────────────────────────────────────────────────────────────────
+router.get('/:sessionId/misc/exists/:jid/:type', async (req, res) => {
+  try {
+    const { sessionId, jid, type = 'number' } = req.params;
+
+    const normalised = normaliseJid(jid, type);
+
+    if (type === 'group') {
+      try {
+        const meta = await wa.getGroupMetadata(sessionId, normalised);
+        return res.json({
+          success: true,
+          data: {
+            jid: normalised,
+            type,
+            exists: true,
+            name: meta?.subject || null,
+          },
+        });
+      } catch {
+        return res.json({
+          success: true,
+          data: { jid: normalised, type, exists: false },
+        });
+      }
+    }
+
+    // individual
+    const result = await wa.checkNumberExists(sessionId, jid);
+    return res.json({
+      success: true,
+      data: {
+        jid: result?.jid || normalised,
+        type,
+        exists: result?.exists ?? false,
+      },
+    });
+  } catch (err) {
+    logger.error({ err }, 'misc/exists error');
     return res.status(500).json({ success: false, message: err.message });
   }
 });
