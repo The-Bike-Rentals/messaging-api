@@ -2,12 +2,6 @@ name: Docker Build and Push
 
 on:
     workflow_dispatch:
-        inputs:
-            branch:
-                description: 'Branch to build'
-                required: true
-                default: 'development'
-                type: string
     push:
         branches:
         - development
