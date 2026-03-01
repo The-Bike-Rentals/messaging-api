@@ -1,11 +1,14 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: whatsapp-sessions-pvc
+  name: azure-blob-whatsapp-logs   # must match deployment volumeMounts PVC claimName
+  namespace: whatsapp
 spec:
   accessModes:
-    - ReadWriteOnce
+    - ReadWriteMany                 # Azure Files (SMB) supports RWX; required for reliable file I/O
   resources:
     requests:
       storage: 1Gi
-  # storageClassName: default  # uncomment and set to your cluster's storage class if needed
+  storageClassName: azurefile      # Azure Files (SMB) — proper filesystem semantics needed by Baileys
+                                   # azureblob-fuse-premium / blob-nfs are object storage and
+                                   # do NOT guarantee fsync, which breaks useMultiFileAuthState

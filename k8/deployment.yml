@@ -57,3 +57,10 @@ spec:
       - name: volume
         persistentVolumeClaim:
           claimName: azure-blob-whatsapp-logs
+      securityContext:
+        # fsGroup ensures the mounted PVC is chowned to this GID at pod start,
+        # so the non-root appuser can read/write /app/.sessions.
+        # node:20-alpine creates appgroup/appuser with uid/gid 1001.
+        fsGroup: 1001
+        runAsUser: 1001
+        runAsGroup: 1001
