@@ -15,9 +15,13 @@ metadata:
   name: whatsapp-ingress
 spec:
   ingressClassName: nginx
+  tls:
+  - hosts:
+    - mail.thebikerentals.com
+    secretName: tls-secret   # kubectl create secret tls tls-secret --cert=tls.crt --key=tls.key -n whatsapp
   rules:
-  - host: HOST_NAME_TO_BE_REPLACED
-    http: &http_paths
+  - host: mail.thebikerentals.com
+    http:
       paths:
       - backend:
           service:

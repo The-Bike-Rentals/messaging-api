@@ -42,6 +42,12 @@ function createApp() {
       secret: config.sessionSecret,
       resave: false,
       saveUninitialized: false,
+      // proxy: true — makes express-session read X-Forwarded-Proto before
+      // deciding whether to stamp the Secure flag on the session cookie.
+      // Without this, cookie.secure:true always stamps Secure regardless of
+      // the forwarded protocol, which breaks sessions when nginx terminates
+      // TLS and proxies plain HTTP internally to the pod.
+      proxy: true,
       store: MongoStore.create({
         mongoUrl: config.mongoUri,
         collectionName: 'sessions',
