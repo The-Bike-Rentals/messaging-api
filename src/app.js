@@ -50,7 +50,10 @@ function createApp() {
       proxy: true,
       store: MongoStore.create({
         mongoUrl: config.mongoUri,
-        collectionName: 'sessions',
+        // IMPORTANT: must NOT be 'sessions' — that collection is owned by the
+        // Mongoose Session model (WhatsApp sessions) and has a unique index on
+        // sessionId. Using the same collection causes E11000 on every login.
+        collectionName: 'http_sessions',
         ttl: 60 * 60 * 24, // 1 day
       }),
       cookie: {
@@ -75,19 +78,23 @@ function createApp() {
 
   // ── Admin Pages (EJS, server-side auth) ──────────────
   app.get('/admin/login', (req, res) => {
+    logger.info({ sessionID: req.sessionID, isAdmin: req.session && req.session.isAdmin }, '[page] /admin/login rendered');
     if (req.session && req.session.isAdmin) return res.redirect('/admin/sessions');
     res.render('admin/login');
   });
 
   app.get('/admin/sessions', requireAdmin, (req, res) => {
+    logger.info({ sessionID: req.sessionID }, '[page] /admin/sessions rendered');
     res.render('admin/sessions', { adminUsername: req.session.adminUsername });
   });
 
   app.get('/admin/config', requireAdmin, (req, res) => {
+    logger.info({ sessionID: req.sessionID }, '[page] /admin/config rendered');
     res.render('admin/config', { adminUsername: req.session.adminUsername });
   });
 
   app.get('/admin/change-password', requireAdmin, (req, res) => {
+    logger.info({ sessionID: req.sessionID }, '[page] /admin/change-password rendered');
     res.render('admin/change-password', { adminUsername: req.session.adminUsername });
   });
 
