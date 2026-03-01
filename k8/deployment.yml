@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: whatsapp-api
+  name: whatsapp-api-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: whatsapp-api
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: whatsapp-api
+    spec:
+      containers:
+      - image: hiteshdutt/whatsapp-api:22533128113
+        env:
+        - name: ADMIN_USERNAME
+          value: "admin"
+        - name: ADMIN_PASSWORD_HASH
+          value: "$2a$12$WU7m6iEvAZ2hnoaAhCvRY.jDgB4UrqjnJOBIXdfPsWNbicbbqE.qq"
+        - name: MONGODB_URI
+          value: "mongodb://whatsapp-mongo:27017/whatsapp-api"
+        - name: PORT
+          value: "3000"
+        - name: API_KEY
+          value: "9020739280_10033095416"
+        - name: SESSION_SECRET
+          value: "session_secret_for_api"
+        - name: WA_MAX_RECONNECT_RETRIES
+          value: "5"
+        - name: WA_RECONNECT_INTERVAL_MS
+          value: "5000"
+        imagePullPolicy: IfNotPresent
+        name: whatsapp-api
+        ports:
+        - containerPort: 3000
+          name: http
+        resources:
+          requests:
+            cpu: 50m
+            memory: 50Mi
+        volumeMounts:
+          - mountPath: /app/.sessions
+            name: volume
+            readOnly: false
+      volumes:
+      - name: volume
+        persistentVolumeClaim:
+          claimName: azure-blob-whatsapp-logs
