@@ -430,9 +430,22 @@
     window.location.href = '/admin/login';
   });
 
+  // ── Auth guard (handles expired/missing session) ────────
+  async function checkAuth() {
+    const resp = await fetch('/api/admin/me');
+    if (resp.status === 401 || resp.status === 403) {
+      window.location.href = '/admin/login';
+      return false;
+    }
+    return true;
+  }
+
   // ── Init ───────────────────────────────────────────────
-  loadEmail();
-  loadSms();
+  checkAuth().then(authed => {
+    if (!authed) return;
+    loadEmail();
+    loadSms();
+  });
 </script>
 </body>
 </html>

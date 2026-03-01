@@ -3,8 +3,9 @@
  * Reads X-API-Key header and validates against API_KEY env / config.
  *
  * Middleware: requireApiKeyOrAdmin
- * Passes the request if EITHER:
+ * Passes the request if ANY of:
  *   - the session has an authenticated admin flag (req.session.isAdmin), OR
+ *   - the request is for the admin login endpoint (/api/admin/login), OR
  *   - a valid X-API-Key header is provided.
  * This lets the Admin UI work with its session cookie while external
  * callers authenticate with their API key. The API key is never sent
@@ -26,6 +27,11 @@ function requireApiKey(req, res, next) {
 function requireApiKeyOrAdmin(req, res, next) {
   // Allow through if the request carries a valid admin session
   if (req.session && req.session.isAdmin) {
+    return next();
+  }
+
+  // Allow through if this is the admin login request (no session yet)
+  if (req.originalUrl.startsWith('/api/admin/login')) {
     return next();
   }
 

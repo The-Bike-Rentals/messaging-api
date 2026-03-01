@@ -44,6 +44,17 @@ function createApp() {
     })
   );
 
+  // ── Admin static-file guard ───────────────────────────
+  // Prevents direct .html URL access (e.g. /admin/sessions.html) from
+  // bypassing the requireAdmin route middleware.
+  app.use('/admin', (req, res, next) => {
+    if (req.path === '/login' || req.path === '/login.html') return next();
+    if (!req.session || !req.session.isAdmin) {
+      return res.redirect('/admin/login');
+    }
+    next();
+  });
+
   // ── Static files ──────────────────────────────────────
   app.use(express.static(path.join(__dirname, '../public')));
 
