@@ -8,6 +8,10 @@ const wa = require('../services/whatsappService');
 const Session = require('../models/Session');
 const Message = require('../models/Message');
 const logger = require('../utils/logger');
+const { requireApiKeyOrAdmin } = require('../middleware/apiKey');
+
+// All routes require either an admin session or a valid API key
+router.use(requireApiKeyOrAdmin);
 
 const upload = multer({ storage: multer.memoryStorage() });
 

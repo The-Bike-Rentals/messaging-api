@@ -4,9 +4,10 @@
 const express = require('express');
 const router = express.Router();
 const Message = require('../models/Message');
+const { requireApiKeyOrAdmin } = require('../middleware/apiKey');
 
 /** GET /api/messages  – paginated message history */
-router.get('/', async (req, res) => {
+router.get('/', requireApiKeyOrAdmin, async (req, res) => {
   try {
     const { channel, sessionId, direction, jid, limit = 50, skip = 0 } = req.query;
     const filter = {};

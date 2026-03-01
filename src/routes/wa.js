@@ -16,7 +16,7 @@ const router = express.Router({ mergeParams: true });
 const multer = require('multer');
 
 const wa = require('../services/whatsappService');
-const { requireApiKey } = require('../middleware/apiKey');
+const { requireApiKeyOrAdmin } = require('../middleware/apiKey');
 const { detectFileType } = require('../utils/fileType');
 const logger = require('../utils/logger');
 
@@ -25,8 +25,8 @@ const upload = multer({
   limits: { fileSize: 64 * 1024 * 1024 },
 });
 
-// All routes in this file require the API key
-router.use(requireApiKey);
+// All routes in this file require either an admin session or a valid API key
+router.use(requireApiKeyOrAdmin);
 
 // ─── Helper: normalise JID ─────────────────────────────────────────────────
 function normaliseJid(jid, type) {

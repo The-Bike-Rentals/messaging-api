@@ -33,13 +33,14 @@ const emailSvc = require('../services/emailService');
 const smsSvc = require('../services/smsService');
 const { detectFileType } = require('../utils/fileType');
 const logger = require('../utils/logger');
+const { requireApiKeyOrAdmin } = require('../middleware/apiKey');
 
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 64 * 1024 * 1024 }, // 64 MB max
 });
 
-router.post('/', upload.single('file'), async (req, res) => {
+router.post('/', requireApiKeyOrAdmin, upload.single('file'), async (req, res) => {
   try {
     const {
       channel,
