@@ -38,6 +38,10 @@ function normaliseJid(jid, type) {
   return `${digits}@s.whatsapp.net`;
 }
 
+function delayMs(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // POST /:sessionId/messages/send
 // ─────────────────────────────────────────────────────────────────────────────
@@ -67,6 +71,83 @@ router.post('/:sessionId/messages/send', async (req, res) => {
     });
   } catch (err) {
     logger.error({ err }, 'messages/send error');
+    return res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// POST /:sessionId/messages/send/bulk
+// Body: [
+//   { jid, type = 'number', delay = 1000, message: { text }, options }
+// ]
+// ─────────────────────────────────────────────────────────────────────────────
+router.post('/:sessionId/messages/send/bulk', async (req, res) => {
+  try {
+    const { sessionId } = req.params;
+    const payload = Array.isArray(req.body) ? req.body : req.body?.messages;
+
+    if (!Array.isArray(payload) || payload.length === 0) {
+      return res.status(400).json({ success: false, message: 'request body must be a non-empty array of messages' });
+    }
+
+    const results = [];
+    const errors = [];
+
+    for (const [index, item] of payload.entries()) {
+      const {
+        jid,
+        type = 'number',
+        delay = 1000,
+        message = {},
+        options = {},
+      } = item || {};
+
+      if (!jid) {
+        errors.push({ index, error: 'jid is required' });
+        continue;
+      }
+
+      const text = message?.text || message?.body || '';
+      if (!text) {
+        errors.push({ index, error: 'message.text is required' });
+        continue;
+      }
+
+      try {
+        const normalised = normaliseJid(jid, type);
+
+        let exists = false;
+        if (type === 'group') {
+          try {
+            await wa.getGroupMetadata(sessionId, normalised);
+            exists = true;
+          } catch {
+            exists = false;
+          }
+        } else {
+          const check = await wa.checkNumberExists(sessionId, jid);
+          exists = check?.exists ?? false;
+        }
+
+        if (!exists) {
+          errors.push({ index, error: 'JID does not exists' });
+          continue;
+        }
+
+        if (index > 0) await delayMs(delay);
+
+        await wa.sendPresence(sessionId, normalised, 'available');
+        const sent = await wa.sendText(sessionId, normalised, text, options || {});
+        results.push({ index, result: sent });
+      } catch (err) {
+        logger.error({ err, index, sessionId }, 'messages/send/bulk item error');
+        errors.push({ index, error: 'An error occured during message send' });
+      }
+    }
+
+    return res.status(200).json({ success: true, data: { results, errors } });
+  } catch (err) {
+    logger.error({ err }, 'messages/send/bulk error');
     return res.status(500).json({ success: false, message: err.message });
   }
 });
