@@ -25,6 +25,7 @@ COPY --from=deps /app/node_modules ./node_modules
 # Copy application source
 COPY src/ ./src/
 COPY public/ ./public/
+COPY views/ ./views/
 COPY package.json ./
 
 # Create the sessions directory and set ownership
