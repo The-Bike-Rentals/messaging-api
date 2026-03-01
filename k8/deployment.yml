@@ -20,12 +20,14 @@ spec:
         app: whatsapp-api
     spec:
       containers:
-      - image: hiteshdutt/whatsapp-api:22533128113
+      - image: hiteshdutt/whatsapp-api:22535696501
         env:
+        - name: NODE_ENV
+          value: production
         - name: ADMIN_USERNAME
-          value: "admin"
+          value: admin
         - name: ADMIN_PASSWORD_HASH
-          value: "$2a$12$WU7m6iEvAZ2hnoaAhCvRY.jDgB4UrqjnJOBIXdfPsWNbicbbqE.qq"
+          value: $2a$10$LTsLp5uQsDU9K9N2MYsdaeZNFF0F8zrNPEUbkrzEIqjmJnXj0admC
         - name: MONGODB_URI
           value: "mongodb://whatsapp-mongo:27017/whatsapp-api"
         - name: PORT

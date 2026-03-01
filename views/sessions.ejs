@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sessions – Message API</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/app.css" />
+  <style>
+    body { background: var(--bg); }
+    .page-wrap { max-width: 960px; margin: 0 auto; padding: 40px 24px; }
+    .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 32px; }
+    .page-header h1 { font-size: 22px; font-weight: 700; }
+    .session-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+    .session-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 12px; padding: 20px 22px;
+      display: flex; flex-direction: column; gap: 10px;
+    }
+    .session-card .sc-header { display: flex; align-items: flex-start; justify-content: space-between; }
+    .session-card .sc-id { font-size: 11px; color: var(--text-muted); font-family: monospace; margin-top: 2px; }
+    .session-card .sc-label { font-size: 15px; font-weight: 600; }
+    .session-card .sc-phone { font-size: 13px; color: var(--text-muted); }
+    .session-card .sc-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 4px; }
+    .session-card .sc-date { font-size: 11.5px; color: var(--text-muted); }
+  </style>
+</head>
+<body>
+  <div class="page-wrap">
+    <div class="page-header">
+      <div>
+        <h1>WhatsApp Sessions</h1>
+        <p class="text-muted" style="font-size:13.5px;">All active and registered messaging sessions</p>
+      </div>
+      <a href="/admin/sessions" class="btn btn-primary">Admin Panel</a>
+    </div>
+
+    <div id="sessions-grid" class="session-grid">
+      <div class="text-center text-muted" style="grid-column:1/-1;padding:48px;">
+        <div class="spinner" style="margin:auto;display:block;width:32px;height:32px;"></div>
+        <p class="mt-1">Loading sessions…</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    async function loadSessions() {
+      try {
+        const resp = await fetch('/api/whatsapp/sessions');
+        const { data } = await resp.json();
+        renderSessions(data || []);
+      } catch { document.getElementById('sessions-grid').innerHTML = '<p class="text-danger text-center" style="grid-column:1/-1;">Failed to load sessions.</p>'; }
+    }
+
+    function renderSessions(sessions) {
+      const grid = document.getElementById('sessions-grid');
+      if (!sessions.length) {
+        grid.innerHTML = '<p class="text-muted text-center" style="grid-column:1/-1;padding:48px;">No sessions configured yet.</p>';
+        return;
+      }
+      const statusBadge = (s) => ({
+        connected:    '<span class="badge badge-success">Connected</span>',
+        qr_pending:   '<span class="badge badge-warning">QR Pending</span>',
+        initializing: '<span class="badge badge-primary">Initializing</span>',
+        disconnected: '<span class="badge badge-danger">Disconnected</span>',
+        logged_out:   '<span class="badge badge-muted">Logged Out</span>',
+      }[s] || `<span class="badge badge-muted">${s}</span>`);
+
+      grid.innerHTML = sessions.map(s => `
+        <div class="session-card">
+          <div class="sc-header">
+            <div>
+              <div class="sc-label">${s.label || s.sessionId}</div>
+              <div class="sc-id">${s.sessionId}</div>
+            </div>
+            ${statusBadge(s.status)}
+          </div>
+          ${s.phoneNumber ? `<div class="sc-phone">📱 +${s.phoneNumber}${s.pushName ? ` · ${s.pushName}` : ''}</div>` : ''}
+          <div class="sc-footer">
+            <span class="sc-date">${s.lastSeen ? new Date(s.lastSeen).toLocaleString() : 'Never connected'}</span>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    loadSessions();
+    setInterval(loadSessions, 20000);
+  </script>
+</body>
+</html>

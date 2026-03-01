@@ -20,6 +20,17 @@ const messagesRouter  = require('./routes/messages');
 function createApp() {
   const app = express();
 
+  // Trust the nginx ingress / reverse proxy so that req.protocol,
+  // req.hostname and req.ip reflect the real client-facing values.
+  // Without this, res.redirect() builds wrong absolute URLs behind a proxy.
+  app.set('trust proxy', 1);
+
+  // ── View engine (EJS) ────────────────────────────────
+  // Server-side rendering ensures auth is enforced before any HTML is sent,
+  // eliminating client-side redirect races for the admin portal.
+  app.set('view engine', 'ejs');
+  app.set('views', path.join(__dirname, '../views'));
+
   // ── Middleware ────────────────────────────────────────
   app.use(cors({ origin: true, credentials: true }));
   app.use(express.json({ limit: '50mb' }));
@@ -39,21 +50,11 @@ function createApp() {
       cookie: {
         secure: config.nodeEnv === 'production',
         httpOnly: true,
+        sameSite: 'lax',
         maxAge: 1000 * 60 * 60 * 24,
       },
     })
   );
-
-  // ── Admin static-file guard ───────────────────────────
-  // Prevents direct .html URL access (e.g. /admin/sessions.html) from
-  // bypassing the requireAdmin route middleware.
-  app.use('/admin', (req, res, next) => {
-    if (req.path === '/login' || req.path === '/login.html') return next();
-    if (!req.session || !req.session.isAdmin) {
-      return res.redirect('/admin/login');
-    }
-    next();
-  });
 
   // ── Static files ──────────────────────────────────────
   app.use(express.static(path.join(__dirname, '../public')));
@@ -66,26 +67,27 @@ function createApp() {
   app.use('/api/admin',     adminRouter);
   app.use('/api/messages',  messagesRouter);
 
-  // ── Admin HTML Pages ──────────────────────────────────
+  // ── Admin Pages (EJS, server-side auth) ──────────────
   app.get('/admin/login', (req, res) => {
-    res.sendFile(path.join(__dirname, '../public/admin/login.html'));
+    if (req.session && req.session.isAdmin) return res.redirect('/admin/sessions');
+    res.render('admin/login');
   });
 
   app.get('/admin/sessions', requireAdmin, (req, res) => {
-    res.sendFile(path.join(__dirname, '../public/admin/sessions.html'));
+    res.render('admin/sessions', { adminUsername: req.session.adminUsername });
   });
 
   app.get('/admin/config', requireAdmin, (req, res) => {
-    res.sendFile(path.join(__dirname, '../public/admin/config.html'));
+    res.render('admin/config', { adminUsername: req.session.adminUsername });
   });
 
   app.get('/admin/change-password', requireAdmin, (req, res) => {
-    res.sendFile(path.join(__dirname, '../public/admin/change-password.html'));
+    res.render('admin/change-password', { adminUsername: req.session.adminUsername });
   });
 
   // ── Public Pages ──────────────────────────────────────
   app.get('/sessions', (req, res) => {
-    res.sendFile(path.join(__dirname, '../public/sessions.html'));
+    res.render('sessions');
   });
 
   // Redirect root to sessions list
