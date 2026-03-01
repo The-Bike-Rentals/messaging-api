@@ -155,34 +155,19 @@ router.get('/:sessionId/misc/exists/:jid/:type', async (req, res) => {
 
     if (type === 'group') {
       try {
-        const meta = await wa.getGroupMetadata(sessionId, normalised);
-        return res.json({
-          success: true,
-          data: {
-            jid: normalised,
-            type,
-            exists: true,
-            name: meta?.subject || null,
-          },
-        });
+        await wa.getGroupMetadata(sessionId, normalised);
+        const exists = true;
+        return res.status(200).json({ exists: exists });
       } catch {
-        return res.json({
-          success: true,
-          data: { jid: normalised, type, exists: false },
-        });
+        const exists = false;
+        return res.status(200).json({ exists: exists });
       }
     }
 
     // individual
     const result = await wa.checkNumberExists(sessionId, jid);
-    return res.json({
-      success: true,
-      data: {
-        jid: result?.jid || normalised,
-        type,
-        exists: result?.exists ?? false,
-      },
-    });
+    const exists = result?.exists ?? false;
+    return res.status(200).json({ exists: exists });
   } catch (err) {
     logger.error({ err }, 'misc/exists error');
     return res.status(500).json({ success: false, message: err.message });
