@@ -1,39 +1,36 @@
-version: '3.8'
-
 services:
-  baileys-db:
-    image: postgres
-    container_name: baileys-db
-    environment:
-      POSTGRES_PASSWORD: 2024pass
-      POSTGRES_DB: bailey
-    ports:
-      - "5432:5432"  # Exportado apenas para demonstração, remova em produção
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    networks: 
-      - wpp-net
-  baileys-api:
-    container_name: baileys-api
+  app:
     build:
       context: .
-      dockerfile: ./Dockerfile
-    volumes:
-      - '.:/app'
-      - /app/node_modules
-      - prisma:/prisma
+      dockerfile: Dockerfile
+    container_name: message-api
+    restart: unless-stopped
     ports:
-      - "3000:3000"
+      - "${PORT:-3000}:3000"
+    env_file:
+      - .env
     environment:
-      DATABASE_URL: postgres://postgres:2024pass@baileys-db:5432/bailey
+      - NODE_ENV=production
+      - MONGODB_URI=mongodb://mongo:27017/message-api
+    volumes:
+      - sessions_data:/app/.sessions
     depends_on:
-      - baileys-db
-    networks: 
-      - wpp-net
+      mongo:
+        condition: service_healthy
+
+  mongo:
+    image: mongo:7
+    container_name: message-api-mongo
+    restart: unless-stopped
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
 
 volumes:
-  postgres_data:
-  prisma:
-networks:
-  wpp-net:
-    driver: bridge
+  mongo_data:
+  sessions_data:

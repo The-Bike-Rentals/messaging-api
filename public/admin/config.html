@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Email &amp; SMS Config – Message API Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/app.css" />
+</head>
+<body>
+<div class="app-layout">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="logo">M</div>
+      <div>
+        <div class="brand-name">Message API</div>
+        <div class="brand-sub">Admin Portal</div>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section-title">WhatsApp</div>
+      <a href="/admin/sessions">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        Sessions
+      </a>
+      <div class="nav-section-title">Settings</div>
+      <a href="/admin/config" class="active">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+        Email &amp; SMS Config
+      </a>
+      <a href="/admin/change-password">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        Change Password
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <a href="#" id="logout-btn">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Sign Out
+      </a>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <div class="main-wrap">
+    <div class="topbar">
+      <h1>Email &amp; SMS Configuration</h1>
+    </div>
+
+    <div class="content">
+      <!-- Tabs -->
+      <div style="display:flex;gap:4px;margin-bottom:20px;border-bottom:1px solid var(--border);padding-bottom:0;">
+        <button class="tab-btn active" data-tab="email" onclick="switchTab('email', this)">Email (SMTP)</button>
+        <button class="tab-btn" data-tab="sms" onclick="switchTab('sms', this)">SMS</button>
+      </div>
+
+      <!-- ─── EMAIL TAB ─── -->
+      <div id="tab-email">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+          <h2 style="font-size:16px;font-weight:600;">Email Configurations</h2>
+          <button class="btn btn-primary" onclick="openEmailModal()">+ Add Email Config</button>
+        </div>
+        <div id="email-list"><div class="text-center text-muted" style="padding:32px;"><div class="spinner" style="margin:auto;display:inline-block;"></div></div></div>
+      </div>
+
+      <!-- ─── SMS TAB ─── -->
+      <div id="tab-sms" class="hidden">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+          <h2 style="font-size:16px;font-weight:600;">SMS Configurations</h2>
+          <button class="btn btn-primary" onclick="openSmsModal()">+ Add SMS Config</button>
+        </div>
+        <div id="sms-list"><div class="text-center text-muted" style="padding:32px;"><div class="spinner" style="margin:auto;display:inline-block;"></div></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ─── Email Modal ─── -->
+<div class="modal-overlay" id="email-modal">
+  <div class="modal" style="max-width:600px;">
+    <h2 id="email-modal-title">Add Email Configuration</h2>
+    <input type="hidden" id="email-id" />
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Config Name</label>
+        <input type="text" id="e-name" class="form-control" placeholder="e.g. Main SMTP" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Sender Address (From)</label>
+        <input type="email" id="e-from" class="form-control" placeholder="noreply@example.com" />
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">SMTP Host <span class="text-danger">*</span></label>
+        <input type="text" id="e-host" class="form-control" placeholder="smtp.gmail.com" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Port</label>
+        <input type="number" id="e-port" class="form-control" value="587" />
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Username / Email</label>
+        <input type="text" id="e-user" class="form-control" placeholder="you@example.com" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password / App Password</label>
+        <input type="password" id="e-pass" class="form-control" placeholder="••••••••" autocomplete="new-password" />
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group flex-center gap-1" style="align-items:flex-end;padding-bottom:2px;">
+        <input type="checkbox" id="e-secure" style="width:16px;height:16px;cursor:pointer;" />
+        <label for="e-secure" class="form-label" style="margin-bottom:0;cursor:pointer;">Use SSL/TLS (port 465)</label>
+      </div>
+      <div class="form-group flex-center gap-1" style="align-items:flex-end;padding-bottom:2px;">
+        <input type="checkbox" id="e-active" checked style="width:16px;height:16px;cursor:pointer;" />
+        <label for="e-active" class="form-label" style="margin-bottom:0;cursor:pointer;">Set as Active Config</label>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="testEmail()">Test Connection</button>
+      <button class="btn btn-secondary" onclick="closeModal('email-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveEmail()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── SMS Modal ─── -->
+<div class="modal-overlay" id="sms-modal">
+  <div class="modal" style="max-width:600px;">
+    <h2 id="sms-modal-title">Add SMS Configuration</h2>
+    <input type="hidden" id="sms-id" />
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Config Name</label>
+        <input type="text" id="s-name" class="form-control" placeholder="e.g. Twilio Main" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Provider <span class="text-danger">*</span></label>
+        <select id="s-provider" class="form-control" onchange="toggleProviderFields()">
+          <option value="generic_http">Generic HTTP</option>
+          <option value="twilio">Twilio</option>
+          <option value="vonage">Vonage (Nexmo)</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Generic HTTP / common -->
+    <div id="s-url-row" class="form-group">
+      <label class="form-label" id="s-url-label">API URL <span class="text-danger">*</span></label>
+      <input type="url" id="s-api-url" class="form-control" placeholder="https://api.example.com/send" />
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label" id="s-user-label">Username / Account SID</label>
+        <input type="text" id="s-api-username" class="form-control" placeholder="Username or SID" autocomplete="off" />
+      </div>
+      <div class="form-group">
+        <label class="form-label" id="s-pass-label">Password / Auth Token</label>
+        <input type="password" id="s-api-password" class="form-control" placeholder="••••••••" autocomplete="new-password" />
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">API Key <span class="text-muted">(if applicable)</span></label>
+        <input type="text" id="s-api-key" class="form-control" placeholder="Additional API key" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Sender / From Number</label>
+        <input type="text" id="s-from" class="form-control" placeholder="+12345678900" />
+      </div>
+    </div>
+    <div class="form-group flex-center gap-1">
+      <input type="checkbox" id="s-active" checked style="width:16px;height:16px;cursor:pointer;" />
+      <label for="s-active" class="form-label" style="margin-bottom:0;cursor:pointer;">Set as Active Config</label>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('sms-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveSms()">Save</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+
+<style>
+  .tab-btn {
+    background: none; border: none; cursor: pointer;
+    padding: 10px 20px; font-size: 14px; font-weight: 500;
+    color: var(--text-muted); border-bottom: 2px solid transparent;
+    font-family: var(--font); transition: all .15s; margin-bottom: -1px;
+  }
+  .tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); }
+  .tab-btn:hover:not(.active) { color: var(--text); }
+
+  .config-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 18px 22px; margin-bottom: 12px;
+    display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  }
+  .config-card .config-info { flex: 1; min-width: 0; }
+  .config-card .config-name { font-weight: 600; font-size: 14px; }
+  .config-card .config-detail { font-size: 12.5px; color: var(--text-muted); margin-top: 3px; }
+</style>
+
+<script>
+  // ── Tabs ───────────────────────────────────────────────
+  function switchTab(tab, el) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    el.classList.add('active');
+    document.getElementById('tab-email').classList.toggle('hidden', tab !== 'email');
+    document.getElementById('tab-sms').classList.toggle('hidden', tab !== 'sms');
+  }
+
+  // ── Load data ──────────────────────────────────────────
+  async function loadEmail() {
+    const resp = await fetch('/api/config/email');
+    const { data } = await resp.json();
+    renderEmailList(data || []);
+  }
+  async function loadSms() {
+    const resp = await fetch('/api/config/sms');
+    const { data } = await resp.json();
+    renderSmsList(data || []);
+  }
+
+  function renderEmailList(cfgs) {
+    const el = document.getElementById('email-list');
+    if (!cfgs.length) { el.innerHTML = '<p class="text-muted text-center">No email configurations yet.</p>'; return; }
+    el.innerHTML = cfgs.map(c => `
+      <div class="config-card">
+        <div class="config-info">
+          <div class="config-name">${c.name || 'Unnamed'} ${c.isActive ? '<span class="badge badge-success">Active</span>' : ''}</div>
+          <div class="config-detail">${c.host}:${c.port} · ${c.user || 'No username'} · From: ${c.from || '–'}</div>
+        </div>
+        <div class="flex gap-1">
+          <button class="btn btn-sm btn-secondary" onclick='editEmail(${JSON.stringify(c)})'>Edit</button>
+          <button class="btn btn-sm btn-danger" onclick="deleteEmail('${c._id}')">Delete</button>
+        </div>
+      </div>`).join('');
+  }
+
+  function renderSmsList(cfgs) {
+    const el = document.getElementById('sms-list');
+    if (!cfgs.length) { el.innerHTML = '<p class="text-muted text-center">No SMS configurations yet.</p>'; return; }
+    el.innerHTML = cfgs.map(c => `
+      <div class="config-card">
+        <div class="config-info">
+          <div class="config-name">${c.name || 'Unnamed'} ${c.isActive ? '<span class="badge badge-success">Active</span>' : ''} <span class="badge badge-primary">${c.provider}</span></div>
+          <div class="config-detail">From: ${c.from || '–'} · ${c.apiUrl ? c.apiUrl.substring(0,50) : '–'}</div>
+        </div>
+        <div class="flex gap-1">
+          <button class="btn btn-sm btn-secondary" onclick='editSms(${JSON.stringify(c)})'>Edit</button>
+          <button class="btn btn-sm btn-danger" onclick="deleteSms('${c._id}')">Delete</button>
+        </div>
+      </div>`).join('');
+  }
+
+  // ── Email CRUD ─────────────────────────────────────────
+  function openEmailModal(reset = true) {
+    if (reset) {
+      document.getElementById('email-modal-title').textContent = 'Add Email Configuration';
+      document.getElementById('email-id').value = '';
+      ['e-name','e-from','e-host','e-user','e-pass'].forEach(id => document.getElementById(id).value = '');
+      document.getElementById('e-port').value = '587';
+      document.getElementById('e-secure').checked = false;
+      document.getElementById('e-active').checked = true;
+    }
+    document.getElementById('email-modal').classList.add('open');
+  }
+  function editEmail(c) {
+    document.getElementById('email-modal-title').textContent = 'Edit Email Configuration';
+    document.getElementById('email-id').value = c._id;
+    document.getElementById('e-name').value = c.name || '';
+    document.getElementById('e-from').value = c.from || '';
+    document.getElementById('e-host').value = c.host || '';
+    document.getElementById('e-port').value = c.port || 587;
+    document.getElementById('e-user').value = c.user || '';
+    document.getElementById('e-pass').value = '';
+    document.getElementById('e-secure').checked = c.secure || false;
+    document.getElementById('e-active').checked = c.isActive || false;
+    openEmailModal(false);
+  }
+  async function saveEmail() {
+    const id = document.getElementById('email-id').value;
+    const payload = {
+      name: document.getElementById('e-name').value,
+      host: document.getElementById('e-host').value,
+      port: parseInt(document.getElementById('e-port').value),
+      secure: document.getElementById('e-secure').checked,
+      user: document.getElementById('e-user').value,
+      pass: document.getElementById('e-pass').value,
+      from: document.getElementById('e-from').value,
+      isActive: document.getElementById('e-active').checked,
+    };
+    if (!payload.host) { showToast('SMTP host is required', 'error'); return; }
+    try {
+      const url = id ? `/api/config/email/${id}` : '/api/config/email';
+      const method = id ? 'PUT' : 'POST';
+      const resp = await fetch(url, { method, headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+      const data = await resp.json();
+      if (data.success) { closeModal('email-modal'); showToast('Email config saved', 'success'); loadEmail(); }
+      else showToast(data.message, 'error');
+    } catch { showToast('Save failed', 'error'); }
+  }
+  async function deleteEmail(id) {
+    if (!confirm('Delete this email configuration?')) return;
+    const resp = await fetch(`/api/config/email/${id}`, { method: 'DELETE' });
+    const data = await resp.json();
+    if (data.success) { showToast('Deleted', 'success'); loadEmail(); }
+    else showToast(data.message, 'error');
+  }
+  async function testEmail() {
+    const payload = {
+      host: document.getElementById('e-host').value,
+      port: parseInt(document.getElementById('e-port').value),
+      secure: document.getElementById('e-secure').checked,
+      user: document.getElementById('e-user').value,
+      pass: document.getElementById('e-pass').value,
+    };
+    try {
+      showToast('Testing connection…', 'info');
+      const resp = await fetch('/api/config/email/test', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+      const data = await resp.json();
+      if (data.success) showToast('Connection successful!', 'success');
+      else showToast(`Test failed: ${data.message}`, 'error');
+    } catch { showToast('Test failed', 'error'); }
+  }
+
+  // ── SMS CRUD ───────────────────────────────────────────
+  function openSmsModal(reset = true) {
+    if (reset) {
+      document.getElementById('sms-modal-title').textContent = 'Add SMS Configuration';
+      document.getElementById('sms-id').value = '';
+      ['s-name','s-api-url','s-api-username','s-api-password','s-api-key','s-from'].forEach(id => document.getElementById(id).value = '');
+      document.getElementById('s-provider').value = 'generic_http';
+      document.getElementById('s-active').checked = true;
+    }
+    toggleProviderFields();
+    document.getElementById('sms-modal').classList.add('open');
+  }
+  function editSms(c) {
+    document.getElementById('sms-modal-title').textContent = 'Edit SMS Configuration';
+    document.getElementById('sms-id').value = c._id;
+    document.getElementById('s-name').value = c.name || '';
+    document.getElementById('s-provider').value = c.provider || 'generic_http';
+    document.getElementById('s-api-url').value = c.apiUrl || '';
+    document.getElementById('s-api-username').value = c.apiUsername || '';
+    document.getElementById('s-api-password').value = '';
+    document.getElementById('s-api-key').value = c.apiKey || '';
+    document.getElementById('s-from').value = c.from || '';
+    document.getElementById('s-active').checked = c.isActive || false;
+    openSmsModal(false);
+  }
+  function toggleProviderFields() {
+    const p = document.getElementById('s-provider').value;
+    const urlRow = document.getElementById('s-url-row');
+    const userLabel = document.getElementById('s-user-label');
+    const passLabel = document.getElementById('s-pass-label');
+    if (p === 'twilio') {
+      urlRow.classList.add('hidden');
+      userLabel.textContent = 'Account SID *';
+      passLabel.textContent = 'Auth Token *';
+    } else if (p === 'vonage') {
+      urlRow.classList.add('hidden');
+      userLabel.textContent = 'API Key *';
+      passLabel.textContent = 'API Secret *';
+    } else {
+      urlRow.classList.remove('hidden');
+      userLabel.textContent = 'Username';
+      passLabel.textContent = 'Password';
+    }
+  }
+  async function saveSms() {
+    const id = document.getElementById('sms-id').value;
+    const payload = {
+      name: document.getElementById('s-name').value,
+      provider: document.getElementById('s-provider').value,
+      apiUrl: document.getElementById('s-api-url').value,
+      apiUsername: document.getElementById('s-api-username').value,
+      apiPassword: document.getElementById('s-api-password').value,
+      apiKey: document.getElementById('s-api-key').value,
+      from: document.getElementById('s-from').value,
+      isActive: document.getElementById('s-active').checked,
+    };
+    try {
+      const url = id ? `/api/config/sms/${id}` : '/api/config/sms';
+      const method = id ? 'PUT' : 'POST';
+      const resp = await fetch(url, { method, headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+      const data = await resp.json();
+      if (data.success) { closeModal('sms-modal'); showToast('SMS config saved', 'success'); loadSms(); }
+      else showToast(data.message, 'error');
+    } catch { showToast('Save failed', 'error'); }
+  }
+  async function deleteSms(id) {
+    if (!confirm('Delete this SMS configuration?')) return;
+    const resp = await fetch(`/api/config/sms/${id}`, { method: 'DELETE' });
+    const data = await resp.json();
+    if (data.success) { showToast('Deleted', 'success'); loadSms(); }
+    else showToast(data.message, 'error');
+  }
+
+  // ── Modal helpers ──────────────────────────────────────
+  function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+  document.querySelectorAll('.modal-overlay').forEach(o => {
+    o.addEventListener('click', e => { if (e.target === o) o.classList.remove('open'); });
+  });
+
+  // ── Toast ──────────────────────────────────────────────
+  function showToast(msg, type = 'info') {
+    const c = document.getElementById('toast-container');
+    const t = document.createElement('div');
+    t.className = `toast toast-${type}`;
+    t.textContent = msg;
+    c.appendChild(t);
+    setTimeout(() => t.remove(), 3500);
+  }
+
+  // ── Logout ─────────────────────────────────────────────
+  document.getElementById('logout-btn').addEventListener('click', async (e) => {
+    e.preventDefault();
+    await fetch('/api/admin/logout', { method: 'POST' });
+    window.location.href = '/admin/login';
+  });
+
+  // ── Init ───────────────────────────────────────────────
+  loadEmail();
+  loadSms();
+</script>
+</body>
+</html>

@@ -1,127 +1,160 @@
+# Message API
+
+A unified messaging API supporting **WhatsApp** (via Baileys), **Email** (SMTP), and **SMS** (Twilio / Vonage / Generic HTTP), with a professional Admin UI.
+
 ---
 
-# Baileys API
+## Features
 
-Baileys is a simple, fast and easy to use WhatsApp Web API written in TypeScript. It is designed to be simple to use and is optimized for usage in Node.js.
+| Feature | Description |
+|---|---|
+| WhatsApp | Full Baileys integration – send/receive all message types, group management, profile operations |
+| Email | SMTP via Nodemailer, configurable per-server |
+| SMS | Twilio, Vonage, or any Generic HTTP provider |
+| Unified API | Single `POST /api/send` endpoint for all channels |
+| Session UI | Admin panel to manage WhatsApp sessions with live QR scanning |
+| Config UI | Admin panel to manage Email & SMS provider settings |
+| Real-time | Socket.IO for live QR code delivery & session status updates |
+| Persistence | MongoDB for sessions, messages, and configuration |
 
-An implementation of [@WhiskeySockets/Baileys](https://github.com/WhiskeySockets/Baileys) as a simple REST API with multiple device support
+---
 
-Project is fork of [nizarfadlan/baileys-api](https://github.com/nizarfadlan/baileys-api)
+## Prerequisites
 
-Application is [dockerized](https://hub.docker.com/repository/docker/hiteshdutt/whatsapp-api)
+- Node.js 18+
+- MongoDB (local or Atlas)
 
-For latest api code please refer [nizarfadlan/baileys-api](https://github.com/nizarfadlan/baileys-api)
+---
 
-## Requirements
+## Quick Start
 
--   NodeJS version 18.19.0 or higher (Recommended version 20 and above)
--   Prisma [supported databases](https://www.prisma.io/docs/reference/database-reference/supported-databases). Tested on MySQL and PostgreSQL
-
-## Installation
-
-1. Download [latest release](https://github.com/nizarfadlan/baileys-api/releases/latest). If you want to skip the build step, you can download the release (file with the `baileys-api.tgz` name pattern) from the release page
-2. Enter to the project directory
-3. Install the dependencies
-
-```sh
+```bash
+# 1. Clone and install
 npm install
+
+# 2. Configure environment
+cp .env.example .env
+# Edit .env – set MONGODB_URI and SESSION_SECRET at minimum
+
+# 3. Create admin user
+npm run init-admin
+
+# 4. Start server
+npm start          # production
+npm run dev        # development (nodemon)
 ```
 
-4. Build the project using the `build` script
+Open **http://localhost:3000/admin/login** → sign in → manage sessions.
 
-```sh
-npm run build
+---
+
+## API Reference
+
+### Unified Send – `POST /api/send`
+
+```jsonc
+// WhatsApp text
+{ "channel": "whatsapp", "sessionId": "my-session", "to": "1234567890", "messageType": "text", "text": "Hello!" }
+
+// WhatsApp image (base64)
+{ "channel": "whatsapp", "sessionId": "my-session", "to": "1234567890", "messageType": "image", "mediaBase64": "<base64>", "caption": "Look at this" }
+
+// Email
+{ "channel": "email", "to": "user@example.com", "subject": "Hello", "text": "Hello from Message API" }
+
+// SMS
+{ "channel": "sms", "to": "+1234567890", "text": "Your OTP is 123456" }
 ```
 
-You can skip this part if you're using the prebuilt one from the release page
+### WhatsApp Sessions
 
-## Setup
+| Method | Endpoint | Description |
+|---|---|---|
+| GET | `/api/whatsapp/sessions` | List all sessions |
+| POST | `/api/whatsapp/sessions` | Create & connect session |
+| GET | `/api/whatsapp/sessions/:id` | Get session details |
+| DELETE | `/api/whatsapp/sessions/:id` | Delete session |
+| POST | `/api/whatsapp/sessions/:id/logout` | Logout session |
+| POST | `/api/whatsapp/sessions/:id/reconnect` | Reconnect session |
 
-1. Copy the `.env.example` file and rename it into `.env`, then update your [connection url](https://www.prisma.io/docs/reference/database-reference/connection-urls) in the `DATABASE_URL` field
-2. Update your [provider](https://www.prisma.io/docs/reference/api-reference/prisma-schema-reference#fields) in the `prisma/schema.prisma` file if you're using database other than MySQL
-3. Run your [migration](https://www.prisma.io/docs/reference/api-reference/command-reference#prisma-migrate)
+### WhatsApp Messages
 
-```sh
-# Run the migration in development mode
-npm run migrate:dev
+| Method | Endpoint | Description |
+|---|---|---|
+| POST | `/api/whatsapp/sessions/:id/messages/text` | Send text |
+| POST | `/api/whatsapp/sessions/:id/messages/image` | Send image (multipart or base64) |
+| POST | `/api/whatsapp/sessions/:id/messages/video` | Send video |
+| POST | `/api/whatsapp/sessions/:id/messages/audio` | Send audio / PTT |
+| POST | `/api/whatsapp/sessions/:id/messages/document` | Send document |
+| POST | `/api/whatsapp/sessions/:id/messages/sticker` | Send sticker |
+| POST | `/api/whatsapp/sessions/:id/messages/location` | Send location |
+| POST | `/api/whatsapp/sessions/:id/messages/contact` | Send contact card |
+| POST | `/api/whatsapp/sessions/:id/messages/reaction` | React to message |
+| POST | `/api/whatsapp/sessions/:id/messages/poll` | Create poll |
+| POST | `/api/whatsapp/sessions/:id/messages/reply` | Reply to message |
+| PUT | `/api/whatsapp/sessions/:id/messages/:msgId` | Edit message |
+| DELETE | `/api/whatsapp/sessions/:id/messages/:msgId` | Delete message |
+| POST | `/api/whatsapp/sessions/:id/messages/read` | Mark as read |
+| GET | `/api/whatsapp/sessions/:id/messages` | Message history (DB) |
 
-# Run the migration in staging mode
-npm run migrate:staging
+### WhatsApp Groups, Profile, Status, Contacts
 
-# Run the migration in production mode
-npm run migrate:prod
-```
+Full group management (create, add/remove/promote/demote participants, invite codes, join by invite), profile picture/status/name updates, WhatsApp Status broadcasts, contact block/unblock — all available under `/api/whatsapp/sessions/:id/`.
 
-Don't forget to always re-run those whenever there's a change on the `prisma/schema.prisma` file
+### Config (Admin-only)
 
-## `.env` Configurations
+| Method | Endpoint | Description |
+|---|---|---|
+| GET/POST | `/api/config/email` | List / create email configs |
+| PUT/DELETE | `/api/config/email/:id` | Update / delete |
+| POST | `/api/config/email/test` | Test SMTP connection |
+| GET/POST | `/api/config/sms` | List / create SMS configs |
+| PUT/DELETE | `/api/config/sms/:id` | Update / delete |
 
-```env
-# Listening Port HTTP and Socket.io
-PORT="3000"
+### Admin Auth
 
-# Project Mode (development|production)
-NODE_ENV="development"
+| Method | Endpoint | Description |
+|---|---|---|
+| POST | `/api/admin/login` | Login |
+| POST | `/api/admin/logout` | Logout |
+| GET | `/api/admin/me` | Current user |
+| POST | `/api/admin/change-password` | Change password |
 
-# Global URL Webhook
-URL_WEBHOOK="http://localhost:3000/webhook"
+---
 
-# Enable Webhook
-ENABLE_WEBHOOK="true"
+## Admin UI Pages
 
-# Enable websocket
-ENABLE_WEBSOCKET="true"
+| URL | Description |
+|---|---|
+| `/admin/login` | Admin login |
+| `/admin/sessions` | Manage WhatsApp sessions (add, QR scan, reconnect, delete) |
+| `/admin/config` | Email & SMS provider configuration |
+| `/admin/change-password` | Update admin password |
+| `/sessions` | Public session status overview |
 
-# Name browser bot
-BOT_NAME="Whatsapp Bot"
+---
 
-# Database Connection URL
-DATABASE_URL="mysql://root:@localhost:3306/baileys_api"
+## SMS Providers
 
-# Pino Logger Level
-LOG_LEVEL="debug"
+### Twilio
+Set `provider: twilio`, `apiUsername: <AccountSID>`, `apiPassword: <AuthToken>`, `from: <Twilio number>`
 
-# Reconnect Interval (in Milliseconds)
-RECONNECT_INTERVAL="5000"
+### Vonage (Nexmo)
+Set `provider: vonage`, `apiUsername: <API Key>`, `apiPassword: <API Secret>`, `from: <Sender ID>`
 
-# Maximum Reconnect Attempts
-MAX_RECONNECT_RETRIES="5"
+### Generic HTTP
+Set `provider: generic_http`, `apiUrl: <POST endpoint>`. The API will POST `{ to, from, message, username?, password?, api_key? }`.
 
-# Maximum SSE QR Generation Attempts
-SSE_MAX_QR_GENERATION="10"
+---
 
-# Name session config
-SESSION_CONFIG_ID="session-config"
+## Environment Variables
 
-# API Key (for Authorization Header and Socket.io Token)
-API_KEY="a6bc226axxxxxxxxxxxxxx"
-```
-
-## Usage
-
-1. Make sure you have completed the **Installation** and **Setup** step
-1. You can then start the app using the `dev` for development and `start` script for production
-
-```sh
-# Development
-npm run dev
-
-# Production
-npm run start
-```
-
-1. Now the endpoint should be available according to your environment variables configuration. Default is at `http://localhost:3000`
-
-## API Docs
-
-The API Documentation can fork **Postman Collection** in your workspace Postman
-
-[<img src="https://run.pstmn.io/button.svg" alt="Run In Postman" style="width: 128px; height: 32px;">](https://app.getpostman.com/run-collection/14456337-fb3349c5-de0e-40ec-b909-3922f4a95b7a?action=collection%2Ffork&source=rip_markdown&collection-url=entityId%3D14456337-fb3349c5-de0e-40ec-b909-3922f4a95b7a%26entityType%3Dcollection%26workspaceId%3Dfbd81f05-e0e1-42cb-b893-60063cf8bcd1)
-
-## Notes
-
--   I only provide a simple authentication method, please modify according to your own needs.
-
-## Notice
-
-This project is intended for learning purpose only, don't use it for spamming or any activities that's prohibited by **WhatsApp**
+| Variable | Description |
+|---|---|
+| `PORT` | Server port (default: 3000) |
+| `MONGODB_URI` | MongoDB connection string |
+| `SESSION_SECRET` | Express session secret |
+| `ADMIN_USERNAME` | Default admin username |
+| `ADMIN_PASSWORD_HASH` | Bcrypt hash (set via `npm run init-admin`) |
+| `EMAIL_*` | Default SMTP settings (overridable via UI) |
+| `SMS_*` | Default SMS settings (overridable via UI) |
