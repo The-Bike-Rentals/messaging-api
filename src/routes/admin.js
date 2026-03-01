@@ -35,7 +35,13 @@ router.post('/login', async (req, res) => {
 
     req.session.isAdmin = true;
     req.session.adminUsername = username;
-    return res.json({ success: true, message: 'Logged in' });
+    // Explicitly save the session to MongoDB before responding.
+    // Without save(), the async MongoStore write may not complete before the
+    // browser follows the redirect, causing requireAdmin to see no session.
+    req.session.save((err) => {
+      if (err) return res.status(500).json({ success: false, message: 'Session save failed' });
+      return res.json({ success: true, message: 'Logged in' });
+    });
   } catch (err) {
     return res.status(500).json({ success: false, message: err.message });
   }
