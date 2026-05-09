@@ -4,8 +4,9 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   annotations:
-    nginx.ingress.kubernetes.io/cors-allow-headers: UserEmail,DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,x-source,authorization
+    nginx.ingress.kubernetes.io/cors-allow-headers: UserEmail,DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,x-source,authorization,X-API-Key,Cookie
     nginx.ingress.kubernetes.io/cors-allow-methods: PUT, GET, POST, OPTIONS, DELETE
+    nginx.ingress.kubernetes.io/cors-allow-credentials: "true"
     nginx.ingress.kubernetes.io/enable-cors: "true"
     nginx.ingress.kubernetes.io/proxy-connect-timeout: "720"
     nginx.ingress.kubernetes.io/proxy-read-timeout: "720"
@@ -15,9 +16,13 @@ metadata:
   name: whatsapp-ingress
 spec:
   ingressClassName: nginx
+  tls:
+  - hosts:
+    - mail.thebikerentals.com
+    secretName: tls-secret   # kubectl create secret tls tls-secret --cert=tls.crt --key=tls.key -n whatsapp
   rules:
-  - host: HOST_NAME_TO_BE_REPLACED
-    http: &http_paths
+  - host: mail.thebikerentals.com
+    http:
       paths:
       - backend:
           service:

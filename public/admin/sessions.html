@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sessions – Message API Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/app.css" />
+  <script src="/socket.io/socket.io.js"></script>
+</head>
+<body>
+<div class="app-layout">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="logo">M</div>
+      <div>
+        <div class="brand-name">Message API</div>
+        <div class="brand-sub">Admin Portal</div>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section-title">WhatsApp</div>
+      <a href="/admin/sessions" class="active">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        Sessions
+      </a>
+      <div class="nav-section-title">Settings</div>
+      <a href="/admin/config">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+        Email & SMS Config
+      </a>
+      <a href="/admin/change-password">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        Change Password
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <a href="#" id="logout-btn">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Sign Out
+      </a>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <div class="main-wrap">
+    <div class="topbar">
+      <h1>WhatsApp Sessions</h1>
+      <div class="topbar-actions">
+        <button class="btn btn-primary" onclick="openNewSessionModal()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Add Session
+        </button>
+      </div>
+    </div>
+
+    <div class="content">
+      <!-- Stats -->
+      <div class="stats-grid" id="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">Total Sessions</div>
+          <div class="stat-value" id="stat-total">–</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Connected</div>
+          <div class="stat-value text-success" id="stat-connected">–</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Pending QR</div>
+          <div class="stat-value text-warning" id="stat-pending">–</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Disconnected</div>
+          <div class="stat-value text-danger" id="stat-disconnected">–</div>
+        </div>
+      </div>
+
+      <!-- Sessions table -->
+      <div class="card">
+        <div class="card-header">
+          <h2>All Sessions</h2>
+          <button class="btn btn-sm btn-secondary" onclick="loadSessions()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.5"/></svg>
+            Refresh
+          </button>
+        </div>
+        <div id="sessions-container">
+          <div class="text-center text-muted" style="padding:32px;">
+            <div class="spinner" style="margin:auto 0;display:inline-block;"></div>
+            <p class="mt-1">Loading sessions…</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ─── New Session Modal ─── -->
+<div class="modal-overlay" id="new-session-modal">
+  <div class="modal">
+    <h2>Add WhatsApp Session</h2>
+    <div class="form-group">
+      <label class="form-label">Session ID <span class="text-danger">*</span></label>
+      <input type="text" id="ns-id" class="form-control" placeholder="e.g. my-business-account" />
+      <div class="text-muted mt-1" style="font-size:11.5px;">Lowercase letters, numbers and hyphens only.</div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Label / Description</label>
+      <input type="text" id="ns-label" class="form-control" placeholder="e.g. Customer Support" />
+    </div>
+    <div class="form-group">
+      <label class="form-label">Webhook URL <span class="text-muted">(optional)</span></label>
+      <input type="url" id="ns-webhook" class="form-control" placeholder="https://your-server.com/webhook" />
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('new-session-modal')">Cancel</button>
+      <button class="btn btn-primary" id="create-session-btn" onclick="createSession()">
+        <span id="cs-text">Create &amp; Connect</span>
+        <span id="cs-spinner" class="spinner hidden" style="width:14px;height:14px;border-width:2px;"></span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── QR Modal ─── -->
+<div class="modal-overlay" id="qr-modal">
+  <div class="modal" style="max-width:360px;text-align:center;">
+    <h2>Scan QR Code</h2>
+    <p class="text-muted mb-2" style="font-size:13px;">Open WhatsApp → Linked Devices → Link a Device</p>
+    <div class="qr-wrap" id="qr-wrap">
+      <div class="spinner" style="margin: 32px auto; display:block; width:40px;height:40px;"></div>
+      <p>Waiting for QR code…</p>
+    </div>
+    <div id="qr-session-id" class="text-muted mt-1" style="font-size:12px;"></div>
+    <div class="modal-footer" style="justify-content:center;">
+      <button class="btn btn-secondary" onclick="closeModal('qr-modal')">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── Toast container ─── -->
+<div id="toast-container"></div>
+
+<script>
+  const socket = io();
+
+  // ── Socket events ──────────────────────────────────────
+  socket.on('qr', ({ sessionId, qrCode }) => {
+    const wrap = document.getElementById('qr-wrap');
+    const sidEl = document.getElementById('qr-session-id');
+    wrap.innerHTML = `<img src="${qrCode}" alt="QR Code" />`;
+    if (sidEl) sidEl.textContent = `Session: ${sessionId}`;
+    document.getElementById('qr-modal').classList.add('open');
+  });
+
+  socket.on('session_status', ({ sessionId, status }) => {
+    if (status === 'connected') {
+      closeModal('qr-modal');
+      showToast(`Session "${sessionId}" connected!`, 'success');
+      loadSessions();
+    } else if (status === 'logged_out') {
+      showToast(`Session "${sessionId}" logged out.`, 'error');
+      loadSessions();
+    } else {
+      loadSessions();
+    }
+  });
+
+  // ── Sessions ───────────────────────────────────────────
+  async function loadSessions() {
+    try {
+      const resp = await fetch('/api/whatsapp/sessions');
+      const { data } = await resp.json();
+      renderSessions(data);
+    } catch (err) {
+      showToast('Failed to load sessions', 'error');
+    }
+  }
+
+  function renderSessions(sessions) {
+    const container = document.getElementById('sessions-container');
+    if (!sessions || sessions.length === 0) {
+      container.innerHTML = `<div class="text-center text-muted" style="padding:48px;"><p>No sessions yet. Click <strong>Add Session</strong> to get started.</p></div>`;
+      updateStats([]);
+      return;
+    }
+    updateStats(sessions);
+    let html = `<div class="table-wrap"><table>
+      <thead><tr>
+        <th>Session ID</th><th>Label</th><th>Phone</th><th>Status</th><th>Last Seen</th><th>Actions</th>
+      </tr></thead><tbody>`;
+    for (const s of sessions) {
+      const statusBadge = {
+        connected: '<span class="badge badge-success">Connected</span>',
+        qr_pending: '<span class="badge badge-warning">QR Pending</span>',
+        initializing: '<span class="badge badge-primary">Initializing</span>',
+        disconnected: '<span class="badge badge-danger">Disconnected</span>',
+        logged_out: '<span class="badge badge-muted">Logged Out</span>',
+      }[s.status] || `<span class="badge badge-muted">${s.status}</span>`;
+
+      const lastSeen = s.lastSeen ? new Date(s.lastSeen).toLocaleString() : '–';
+      const phone = s.phoneNumber ? `+${s.phoneNumber}` : '–';
+      const pushName = s.pushName ? `<br><span class="text-muted" style="font-size:11.5px;">${s.pushName}</span>` : '';
+
+      html += `<tr>
+        <td><code style="font-size:12px;">${s.sessionId}</code></td>
+        <td>${s.label || '–'}</td>
+        <td>${phone}${pushName}</td>
+        <td>${statusBadge}</td>
+        <td style="font-size:12.5px;color:var(--text-muted);">${lastSeen}</td>
+        <td>
+          <div class="flex gap-1">
+            ${s.status === 'qr_pending' ? `<button class="btn btn-sm btn-warning" onclick="showQR('${s.sessionId}', '${s.qrCode}')">Show QR</button>` : ''}
+            ${(s.status === 'disconnected' || s.status === 'logged_out') ? `<button class="btn btn-sm btn-primary" onclick="reconnectSession('${s.sessionId}')">Reconnect</button>` : ''}
+            ${s.status === 'connected' ? `<button class="btn btn-sm btn-secondary" onclick="logoutSession('${s.sessionId}')">Logout</button>` : ''}
+            <button class="btn btn-sm btn-danger" onclick="deleteSession('${s.sessionId}')">Delete</button>
+          </div>
+        </td>
+      </tr>`;
+    }
+    html += '</tbody></table></div>';
+    container.innerHTML = html;
+  }
+
+  function updateStats(sessions) {
+    document.getElementById('stat-total').textContent = sessions.length;
+    document.getElementById('stat-connected').textContent = sessions.filter(s => s.status === 'connected').length;
+    document.getElementById('stat-pending').textContent = sessions.filter(s => s.status === 'qr_pending').length;
+    document.getElementById('stat-disconnected').textContent = sessions.filter(s => s.status === 'disconnected' || s.status === 'logged_out').length;
+  }
+
+  function showQR(sessionId, qrCode) {
+    const wrap = document.getElementById('qr-wrap');
+    const sidEl = document.getElementById('qr-session-id');
+    if (qrCode) wrap.innerHTML = `<img src="${qrCode}" alt="QR Code" />`;
+    else wrap.innerHTML = `<div class="spinner" style="margin:32px auto;display:block;width:40px;height:40px;"></div><p>Waiting for QR code…</p>`;
+    sidEl.textContent = `Session: ${sessionId}`;
+    document.getElementById('qr-modal').classList.add('open');
+  }
+
+  function openNewSessionModal() {
+    document.getElementById('new-session-modal').classList.add('open');
+  }
+
+  async function createSession() {
+    const sid = document.getElementById('ns-id').value.trim();
+    if (!sid) { showToast('Session ID is required', 'error'); return; }
+    if (!/^[a-z0-9-]+$/.test(sid)) { showToast('Session ID: lowercase letters, numbers, hyphens only', 'error'); return; }
+
+    const btn = document.getElementById('create-session-btn');
+    btn.disabled = true;
+    document.getElementById('cs-spinner').classList.remove('hidden');
+
+    try {
+      const resp = await fetch('/api/whatsapp/sessions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sessionId: sid,
+          label: document.getElementById('ns-label').value.trim(),
+          webhookUrl: document.getElementById('ns-webhook').value.trim(),
+        }),
+      });
+      const data = await resp.json();
+      if (data.success) {
+        closeModal('new-session-modal');
+        showToast('Session created. Waiting for QR…', 'info');
+        loadSessions();
+      } else {
+        showToast(data.message, 'error');
+      }
+    } catch (err) {
+      showToast('Failed to create session', 'error');
+    } finally {
+      btn.disabled = false;
+      document.getElementById('cs-spinner').classList.add('hidden');
+      document.getElementById('cs-text').textContent = 'Create & Connect';
+    }
+  }
+
+  async function reconnectSession(sessionId) {
+    try {
+      const resp = await fetch(`/api/whatsapp/sessions/${sessionId}/reconnect`, { method: 'POST' });
+      const data = await resp.json();
+      if (data.success) { showToast('Reconnecting…', 'info'); loadSessions(); }
+      else showToast(data.message, 'error');
+    } catch { showToast('Failed to reconnect', 'error'); }
+  }
+
+  async function logoutSession(sessionId) {
+    if (!confirm(`Logout session "${sessionId}"?`)) return;
+    try {
+      const resp = await fetch(`/api/whatsapp/sessions/${sessionId}/logout`, { method: 'POST' });
+      const data = await resp.json();
+      if (data.success) { showToast('Logged out', 'success'); loadSessions(); }
+      else showToast(data.message, 'error');
+    } catch { showToast('Failed to logout', 'error'); }
+  }
+
+  async function deleteSession(sessionId) {
+    if (!confirm(`Permanently delete session "${sessionId}"? This cannot be undone.`)) return;
+    try {
+      const resp = await fetch(`/api/whatsapp/sessions/${sessionId}`, { method: 'DELETE' });
+      const data = await resp.json();
+      if (data.success) { showToast('Session deleted', 'success'); loadSessions(); }
+      else showToast(data.message, 'error');
+    } catch { showToast('Failed to delete session', 'error'); }
+  }
+
+  // ── Modal helpers ──────────────────────────────────────
+  function closeModal(id) {
+    document.getElementById(id).classList.remove('open');
+  }
+  document.querySelectorAll('.modal-overlay').forEach(overlay => {
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.classList.remove('open'); });
+  });
+
+  // ── Toast ──────────────────────────────────────────────
+  function showToast(msg, type = 'info') {
+    const container = document.getElementById('toast-container');
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    toast.textContent = msg;
+    container.appendChild(toast);
+    setTimeout(() => toast.remove(), 3500);
+  }
+
+  // ── Logout ─────────────────────────────────────────────
+  document.getElementById('logout-btn').addEventListener('click', async (e) => {
+    e.preventDefault();
+    await fetch('/api/admin/logout', { method: 'POST' });
+    window.location.href = '/admin/login';
+  });
+
+  // ── Auth guard (handles expired/missing session) ────────
+  async function checkAuth() {
+    const resp = await fetch('/api/admin/me');
+    if (resp.status === 401 || resp.status === 403) {
+      window.location.href = '/admin/login';
+      return false;
+    }
+    return true;
+  }
+
+  // ── Init ───────────────────────────────────────────────
+  checkAuth().then(authed => {
+    if (!authed) return;
+    loadSessions();
+    setInterval(loadSessions, 15000);
+  });
+</script>
+</body>
+</html>

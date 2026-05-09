@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Admin Login – Message API</title>
+  <%- include('../partials/_head') %>
+  <style>
+    body { display: flex; align-items: center; justify-content: center; min-height: 100vh; background: var(--bg); }
+    .login-wrap { width: 100%; max-width: 380px; padding: 20px; }
+    .login-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 36px 32px; box-shadow: var(--shadow); }
+    .login-logo { text-align: center; margin-bottom: 28px; }
+    .login-logo .logo-icon {
+      width: 52px; height: 52px; border-radius: 14px;
+      background: linear-gradient(135deg, #4f8ef7, #8b5cf6);
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 24px; font-weight: 800; color: #fff; margin-bottom: 12px;
+    }
+    .login-logo h1 { font-size: 20px; font-weight: 700; }
+    .login-logo p { font-size: 13px; color: var(--text-muted); margin-top: 4px; }
+    .login-card .btn { width: 100%; justify-content: center; padding: 11px; font-size: 14px; margin-top: 6px; }
+    #error-msg { display: none; }
+  </style>
+</head>
+<body>
+  <div class="login-wrap">
+    <div class="login-card">
+      <div class="login-logo">
+        <div class="logo-icon">M</div>
+        <h1>Message API</h1>
+        <p>Admin Portal – Sign in to continue</p>
+      </div>
+
+      <% if (locals.error) { %>
+      <div class="alert alert-danger" style="display:flex;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <span><%= error %></span>
+      </div>
+      <% } %>
+
+      <div id="error-msg" class="alert alert-danger">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <span id="error-text">Invalid credentials</span>
+      </div>
+
+      <form id="login-form">
+        <div class="form-group">
+          <label class="form-label">Username</label>
+          <input type="text" id="username" class="form-control" placeholder="admin" autocomplete="username" required />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <input type="password" id="password" class="form-control" placeholder="••••••••" autocomplete="current-password" required />
+        </div>
+        <button type="submit" class="btn btn-primary" id="login-btn">
+          <span id="btn-text">Sign In</span>
+          <span id="btn-spinner" class="spinner hidden" style="width:16px;height:16px;border-width:2px;"></span>
+        </button>
+      </form>
+    </div>
+    <p class="text-center text-muted mt-2" style="font-size:12px;">Message API v1.0.0</p>
+  </div>
+
+  <script>
+    document.getElementById('login-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('login-btn');
+      const spinner = document.getElementById('btn-spinner');
+      const btnText = document.getElementById('btn-text');
+      const errDiv = document.getElementById('error-msg');
+      const errText = document.getElementById('error-text');
+
+      btn.disabled = true;
+      spinner.classList.remove('hidden');
+      btnText.textContent = 'Signing in…';
+      errDiv.style.display = 'none';
+
+      try {
+        const resp = await fetch('/api/admin/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            username: document.getElementById('username').value,
+            password: document.getElementById('password').value,
+          }),
+        });
+        const data = await resp.json();
+        if (data.success) {
+          window.location.href = '/admin/sessions';
+        } else {
+          errText.textContent = data.message || 'Invalid credentials';
+          errDiv.style.display = 'flex';
+        }
+      } catch (err) {
+        errText.textContent = 'Connection error. Please try again.';
+        errDiv.style.display = 'flex';
+      } finally {
+        btn.disabled = false;
+        spinner.classList.add('hidden');
+        btnText.textContent = 'Sign In';
+      }
+    });
+  </script>
+</body>
+</html>

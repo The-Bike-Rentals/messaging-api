@@ -1,9 +1,0 @@
-{
-  "version": "1",
-  "name": "Baileys API v2.0.0",
-  "type": "collection",
-  "ignore": [
-    "node_modules",
-    ".git"
-  ]
-}

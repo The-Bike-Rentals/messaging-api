@@ -19,23 +19,36 @@ spec:
       labels:
         app: whatsapp-api
     spec:
+      initContainers:
+      - name: fix-permissions
+        image: busybox
+        command: ['sh', '-c', 'chown -R 1001:1001 /app/.sessions && chmod -R 775 /app/.sessions']
+        securityContext:
+          runAsUser: 0
+        volumeMounts:
+          - mountPath: /app/.sessions
+            name: volume
       containers:
-      - image: hiteshdutt/whatsapp-api:13277973145
+      - image: hiteshdutt/whatsapp-api:22537751066
         env:
-        - name: DATABASE_URL
-          value: "postgres_connection_string"
+        - name: NODE_ENV
+          value: production
+        - name: ADMIN_USERNAME
+          value: admin
+        - name: ADMIN_PASSWORD_HASH
+          value: $2a$10$LTsLp5uQsDU9K9N2MYsdaeZNFF0F8zrNPEUbkrzEIqjmJnXj0admC
+        - name: MONGODB_URI
+          value: "mongodb://whatsapp-mongo:27017/whatsapp-api"
         - name: PORT
           value: "3000"
         - name: API_KEY
-          value: "api_key_for_verfication_on_api"
-        - name: LOG_LEVEL
-          value: "info"
-        - name: LOG_FILE
-          value: "/app/logs/whatsapplogs"
-        - name: CONSOLE_LOG_FILE
-          value: "/app/logs/whatsapplogs"
-        command: [ "/bin/sh", "-c" ]
-        args: [ "npx ts-node /app/src/main.ts" ]
+          value: "9020739280_10033095416"
+        - name: SESSION_SECRET
+          value: "session_secret_for_api"
+        - name: WA_MAX_RECONNECT_RETRIES
+          value: "5"
+        - name: WA_RECONNECT_INTERVAL_MS
+          value: "5000"
         imagePullPolicy: IfNotPresent
         name: whatsapp-api
         ports:
@@ -46,10 +59,17 @@ spec:
             cpu: 50m
             memory: 50Mi
         volumeMounts:
-          - mountPath: /app/logs/whatsapplogs/
+          - mountPath: /app/.sessions
             name: volume
             readOnly: false
       volumes:
       - name: volume
         persistentVolumeClaim:
           claimName: azure-blob-whatsapp-logs
+      securityContext:
+        # fsGroup ensures the mounted PVC is chowned to this GID at pod start,
+        # so the non-root appuser can read/write /app/.sessions.
+        # node:20-alpine creates appgroup/appuser with uid/gid 1001.
+        fsGroup: 1001
+        runAsUser: 1001
+        runAsGroup: 1001

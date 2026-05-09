@@ -1,27 +1,35 @@
 {
-    // Use IntelliSense to learn about possible attributes.
-    // Hover to view descriptions of existing attributes.
-    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
-    "version": "0.2.0",
-    "configurations": [
-        {
-            "type": "node",
-            "request": "launch",
-            "name": "Launch Program",
-            "runtimeArgs": [
-                "-r",
-                "ts-node/register",
-                "--loader",
-                "ts-node/esm"
-            ],
-            "skipFiles": [
-                "<node_internals>/**"
-            ],
-            "program": "${workspaceFolder}\\src\\main.ts",
-            "preLaunchTask": "tsc: build - tsconfig.json",
-            "outFiles": [
-                "${workspaceFolder}/dist/**/*.js"
-            ]
-        }
-    ]
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Debug: server",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/src/server.js",
+      "envFile": "${workspaceFolder}/.env",
+      "console": "integratedTerminal",
+      "restart": false,
+      "skipFiles": ["<node_internals>/**", "${workspaceFolder}/node_modules/**"]
+    },
+    {
+      "name": "Debug: server (nodemon)",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "${workspaceFolder}/node_modules/.bin/nodemon",
+      "program": "${workspaceFolder}/src/server.js",
+      "envFile": "${workspaceFolder}/.env",
+      "console": "integratedTerminal",
+      "restart": true,
+      "skipFiles": ["<node_internals>/**", "${workspaceFolder}/node_modules/**"]
+    },
+    {
+      "name": "Debug: init-admin",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/src/scripts/initAdmin.js",
+      "envFile": "${workspaceFolder}/.env",
+      "console": "integratedTerminal",
+      "skipFiles": ["<node_internals>/**", "${workspaceFolder}/node_modules/**"]
+    }
+  ]
 }

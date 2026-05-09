@@ -1,8 +1,5 @@
 node_modules/
-dist/
-debug/
-prisma/migrations/
 .env
-*.tgz
+.sessions/
 *.log
-tsconfig.tsbuildinfo
+*.DS_Store
