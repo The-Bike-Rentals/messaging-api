@@ -1,6 +1,31 @@
 # Message API
 
-A unified messaging API supporting **WhatsApp** (via Baileys), **Email** (SMTP), and **SMS** (Twilio / Vonage / Generic HTTP), with a professional Admin UI.
+A unified messaging API supporting **WhatsApp** (via [@whiskeysockets/baileys](https://github.com/WhiskeySockets/Baileys)), **Email** (SMTP), and **SMS** (Generic HTTP / Twilio / Vonage), with an Admin UI.
+
+---
+
+> **⚠️ IMPORTANT — Please read before using**
+>
+> This project is built **for learning and educational purposes only**.
+>
+> - **This is NOT a spam tool.** Do not use it to send unsolicited messages, bulk promotional content, or anything that violates the terms of service of any messaging platform or applicable law.
+> - **This project is not affiliated with, endorsed by, or in any way related to WhatsApp, Meta, Twilio, Vonage, or any other messaging provider.** All trademarks belong to their respective owners.
+> - WhatsApp integration relies on **[@whiskeysockets/baileys](https://github.com/WhiskeySockets/Baileys)**, an open-source, unofficial WhatsApp Web API library. Using unofficial clients may violate [WhatsApp's Terms of Service](https://www.whatsapp.com/legal/terms-of-service). **Use at your own risk** — accounts can be banned.
+> - Email and SMS features connect to third-party SMTP/HTTP providers via credentials you supply. This project does not operate or resell any messaging infrastructure.
+>
+> **By using this project you accept full responsibility for your usage and agree to comply with all relevant laws and platform terms of service.**
+
+---
+
+## About Baileys
+
+WhatsApp connectivity is powered by **[@whiskeysockets/baileys](https://github.com/WhiskeySockets/Baileys)**, a TypeScript/JavaScript library that implements the WhatsApp Web multi-device protocol over WebSockets. It is:
+
+- **Unofficial** — not built or supported by WhatsApp/Meta
+- **Reverse-engineered** — based on the WhatsApp Web protocol
+- **Open-source** — MIT licensed, community maintained
+
+This project simply wraps Baileys behind an HTTP API and a management UI to make it easier to experiment with and learn from.
 
 ---
 
