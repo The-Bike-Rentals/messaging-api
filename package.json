@@ -27,6 +27,8 @@
     "pino-pretty": "^11.0.0",
     "qrcode": "^1.5.4",
     "socket.io": "^4.7.4",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.1",
     "uuid": "^9.0.1"
   },
   "devDependencies": {

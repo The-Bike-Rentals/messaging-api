@@ -4,6 +4,8 @@ const session = require('express-session');
 const MongoStore = require('connect-mongo');
 const cors = require('cors');
 const path = require('path');
+const swaggerUi = require('swagger-ui-express');
+const swaggerSpec = require('./swagger');
 
 const config = require('./config');
 const logger = require('./utils/logger');
@@ -67,6 +69,10 @@ function createApp() {
 
   // ── Static files ──────────────────────────────────────
   app.use(express.static(path.join(__dirname, '../public')));
+
+  // ── Swagger docs ──────────────────────────────────────
+  app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+  app.get('/api/docs.json', (req, res) => res.json(swaggerSpec));
 
   // ── API Routes ────────────────────────────────────────
   app.use('/api/send',      sendRouter);
