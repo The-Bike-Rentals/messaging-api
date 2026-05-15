@@ -2,21 +2,20 @@
  * WhatsApp Service
  * Manages multiple Baileys client instances.
  * Auth state is kept in-memory; session metadata is persisted in MongoDB.
+ *
+ * NOTE: @whiskeysockets/baileys v7+ is an ESM-only package.
+ * We load it once via dynamic import() and cache the result.
  */
-const {
-  default: makeWASocket,
-  useMultiFileAuthState,
-  DisconnectReason,
-  fetchLatestBaileysVersion,
-  generateWAMessageFromContent,
-  proto,
-  getAggregateVotesInPollMessage,
-  downloadContentFromMessage,
-  jidNormalizedUser,
-  areJidsSameUser,
-  Browsers,
-} = require('@whiskeysockets/baileys');
 const { Boom } = require('@hapi/boom');
+
+// ─── ESM interop: load baileys once and cache ─────────────────────────────────
+let _baileys = null;
+async function _getBaileys() {
+  if (!_baileys) {
+    _baileys = await import('@whiskeysockets/baileys');
+  }
+  return _baileys;
+}
 const pino = require('pino');
 const QRCode = require('qrcode');
 const fs = require('fs');
@@ -155,6 +154,14 @@ async function createSession(sessionId, label = '', webhookUrl = '') {
 
 // ─── Internal: start / restart a Baileys socket ──────────────────────────────
 async function _startSocket(sessionId, dbSession) {
+  const {
+    default: makeWASocket,
+    fetchLatestBaileysVersion,
+    useMultiFileAuthState,
+    DisconnectReason,
+    Browsers,
+  } = await _getBaileys();
+
   const { version } = await fetchLatestBaileysVersion();
   const { state, saveCreds } = await useMultiFileAuthState(authDir(sessionId));
 
